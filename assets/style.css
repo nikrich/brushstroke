@@ -633,21 +633,6 @@
   }
   .feedback.feedback-warn { color: oklch(75% 0.08 70); }
   .feedback.feedback-right { color: var(--gold-warm); font-style: normal; font-weight: 500; }
-  .feedback.feedback-clue {
-    color: oklch(70% 0.06 75);
-    font-style: italic;
-  }
-  .feedback.feedback-clue::before {
-    content: 'Clue —';
-    font-family: var(--mono);
-    font-style: normal;
-    font-size: 10px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--gold-dark);
-    margin-right: 10px;
-    vertical-align: 1px;
-  }
   @keyframes feedback-in {
     0% { opacity: 0; transform: translateY(-4px); }
     100% { opacity: 1; transform: translateY(0); }
@@ -675,7 +660,6 @@
   .action:hover { color: var(--ink-warm); }
   .action:disabled { opacity: 0.35; cursor: not-allowed; }
   .action:disabled:hover { color: var(--muted); }
-  .actions-sep { opacity: 0.4; user-select: none; }
 
   .action.confirming {
     color: var(--carmine);
@@ -734,12 +718,6 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
-  .metric.metric-hinted .v::after {
-    content: '·';
-    color: var(--gold-dark);
-    margin-left: 4px;
-  }
-
   /* ===================================================================
      Footer
      =================================================================== */

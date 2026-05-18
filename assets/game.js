@@ -3,7 +3,7 @@
    ===================================================================== */
 
 /* ---- Tunables -------------------------------------------------------- */
-const START_LEVEL = 3;          // 3 = 8 tiles (4×2). 1 = 2 tiles (max tension).
+const START_LEVEL = 4;          // 4 = 16 tiles (4×4). Each wrong guess doubles.
 const MAX_LEVEL   = 9;          // 512 tiles — effectively resolved.
 const COLOR_RES   = 512;        // off-screen canvas size for color sampling.
 const FADE_MS     = 380;        // tile crossfade duration
@@ -135,7 +135,7 @@ const COPY = {
   concedeFirst: 'Concede this lot? Tap again to confirm.',
   fetchErr: 'This lot is currently between exhibitions.',
   awaiting: 'Awaiting attribution',
-  opening: 'Eight rough fields. Make the call.'
+  opening: 'Sixteen rough fields. Make the call.'
 };
 
 const SHARE_COPY = {
@@ -163,7 +163,6 @@ const els = {
   feedback:      $('feedback'),
   acList:        $('ac-list'),
 
-  actionClue:    $('action-clue'),
   actionConcede: $('action-concede'),
 
   mGuesses:      $('m-guesses'),
@@ -201,7 +200,6 @@ const state = {
   artwork: null,
   level: START_LEVEL,
   guesses: 0,
-  hintUsed: false,
   concedeArmed: false,
   resolved: false,
   bestScore: 0,
@@ -232,10 +230,11 @@ function tilesAtLevel(n) {
   return c * r;
 }
 
-function scoreFor(level, hintUsed) {
-  const base = Math.round(1000 * (MAX_LEVEL - level + 1) / MAX_LEVEL);
-  const s = hintUsed ? Math.round(base * 0.5) : base;
-  return Math.max(50, s);
+function scoreFor(level) {
+  // Rebalanced so START_LEVEL → 1000 and MAX_LEVEL → ~floor(1000/span).
+  const span = MAX_LEVEL - START_LEVEL + 1;
+  const base = Math.round(1000 * (MAX_LEVEL - level + 1) / span);
+  return Math.max(50, base);
 }
 
 /* ---- Guess normalization + tolerant matching ------------------------- */
@@ -435,10 +434,10 @@ async function bisectTo(newLevel) {
 }
 
 /* ---- Placard --------------------------------------------------------- */
-function setPlacardUntitled() {
+function setPlacardUntitled(metaText) {
   els.placardTitle.textContent = 'Untitled';
   els.placardTitle.classList.add('untitled');
-  els.placardMeta.textContent = COPY.awaiting;
+  els.placardMeta.textContent = metaText || COPY.awaiting;
 }
 
 function renderPlacardTitle(text, withCursor) {
@@ -484,10 +483,8 @@ function setClarityValue(n) {
 function updateScoreboard(opts = {}) {
   els.mGuesses.textContent = pad2(state.guesses);
   setClarityValue(tilesAtLevel(state.level));
-  const projected = scoreFor(state.level, state.hintUsed);
+  const projected = scoreFor(state.level);
   els.mScore.textContent = String(projected);
-
-  els.mScoreWrap.classList.toggle('metric-hinted', state.hintUsed);
 
   if (opts.flashClarity) flashMetric(els.mClarityWrap);
   if (opts.flashGuesses) flashMetric(els.mGuessesWrap);
@@ -504,7 +501,7 @@ function flashMetric(el) {
 
 /* ---- Feedback line --------------------------------------------------- */
 function setFeedback(text, cls = '') {
-  els.feedback.classList.remove('feedback-warn', 'feedback-right', 'feedback-clue', 'flash');
+  els.feedback.classList.remove('feedback-warn', 'feedback-right', 'flash');
   if (cls) els.feedback.classList.add(cls);
   els.feedback.textContent = text || ' ';
   void els.feedback.offsetWidth;
@@ -513,7 +510,7 @@ function setFeedback(text, cls = '') {
 
 function clearFeedback() {
   els.feedback.textContent = ' ';
-  els.feedback.classList.remove('feedback-warn', 'feedback-right', 'feedback-clue', 'flash');
+  els.feedback.classList.remove('feedback-warn', 'feedback-right', 'flash');
 }
 
 /* ---- Frame state ----------------------------------------------------- */
@@ -539,16 +536,14 @@ async function startRound() {
   state.artwork = null;
   state.level = START_LEVEL;
   state.guesses = 0;
-  state.hintUsed = false;
   state.concedeArmed = false;
   state.resolved = false;
   state.solvedAtLevel = null;
-  els.actionClue.disabled = false;
   els.actionConcede.disabled = false;
   els.actionConcede.classList.remove('confirming');
   els.actionConcede.textContent = 'Concede';
 
-  setPlacardUntitled();
+  setPlacardUntitled(art.clue);
   clearFeedback();
   showLoading();
   setMosaicLevelEmpty();
@@ -610,11 +605,10 @@ async function submitGuess() {
 
   if (matches(raw, state.artwork)) {
     state.solvedAtLevel = state.level;
-    state.lastScore = scoreFor(state.level, state.hintUsed);
+    state.lastScore = scoreFor(state.level);
     if (state.lastScore > state.bestScore) state.bestScore = state.lastScore;
     state.solvedCount++;
     enableInput(false);
-    els.actionClue.disabled = true;
     els.actionConcede.disabled = true;
     setFeedback(pick(COPY.right), 'feedback-right');
     updateScoreboard({ flashScore: true, flashGuesses: true });
@@ -631,7 +625,6 @@ async function submitGuess() {
     await sleep(700);
     state.lastScore = 0;
     enableInput(false);
-    els.actionClue.disabled = true;
     els.actionConcede.disabled = true;
     await revealConceded(true);
     return;
@@ -689,9 +682,7 @@ function showResult(kind) {
   els.rGuesses.textContent = String(state.guesses);
   const tiles = tilesAtLevel(state.solvedAtLevel || state.level);
   els.rClarity.textContent = (kind === 'correct') ? `${tiles} tile${tiles === 1 ? '' : 's'}` : '—';
-  els.rScore.textContent = state.hintUsed && kind === 'correct'
-    ? `${state.lastScore} ·`
-    : String(state.lastScore);
+  els.rScore.textContent = String(state.lastScore);
 
   els.resultOverlay.hidden = false;
   void els.resultOverlay.offsetWidth;
@@ -703,16 +694,7 @@ function hideResult() {
   setTimeout(() => { els.resultOverlay.hidden = true; }, 500);
 }
 
-/* ---- Hints + concede ------------------------------------------------- */
-function useClue() {
-  if (state.resolved || !state.artwork) return;
-  if (state.hintUsed) return;
-  state.hintUsed = true;
-  els.actionClue.disabled = true;
-  setFeedback(state.artwork.clue, 'feedback-clue');
-  updateScoreboard({ flashScore: true });
-}
-
+/* ---- Concede --------------------------------------------------------- */
 function concede() {
   if (state.resolved || !state.artwork || state.busy) return;
   if (!state.concedeArmed) {
@@ -725,7 +707,6 @@ function concede() {
   state.concedeArmed = false;
   els.actionConcede.classList.remove('confirming');
   els.actionConcede.disabled = true;
-  els.actionClue.disabled = true;
   enableInput(false);
   setFeedback('Conceded. The catalogue obliges.', 'feedback-warn');
   revealConceded(false);
@@ -1015,7 +996,6 @@ els.guessForm.addEventListener('submit', (e) => {
   submitGuess();
 });
 
-els.actionClue.addEventListener('click', useClue);
 els.actionConcede.addEventListener('click', concede);
 
 els.guessInput.addEventListener('input', () => {
