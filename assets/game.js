@@ -1,9 +1,9 @@
 /* =====================================================================
-   Pixel Provenance — single-file game implementation
+   Brushstroke — game implementation
    ===================================================================== */
 
 /* ---- Tunables -------------------------------------------------------- */
-const START_LEVEL = 1;          // 1 = 2 tiles (max tension). 2 = 4 tiles.
+const START_LEVEL = 3;          // 3 = 8 tiles (4×2). 1 = 2 tiles (max tension).
 const MAX_LEVEL   = 9;          // 512 tiles — effectively resolved.
 const COLOR_RES   = 512;        // off-screen canvas size for color sampling.
 const FADE_MS     = 380;        // tile crossfade duration
@@ -135,7 +135,7 @@ const COPY = {
   concedeFirst: 'Concede this lot? Tap again to confirm.',
   fetchErr: 'This lot is currently between exhibitions.',
   awaiting: 'Awaiting attribution',
-  opening: 'Two flat fields. Make the call.'
+  opening: 'Eight rough fields. Make the call.'
 };
 
 const SHARE_COPY = {
@@ -799,7 +799,7 @@ function renderShareCard() {
 
   ctx.font = '500 13px "JetBrains Mono", monospace';
   ctx.fillStyle = '#9a8b73';
-  ctx.fillText(spaced('PIXEL · PROVENANCE'), W / 2, H - 110);
+  ctx.fillText(spaced('BRUSHSTROKE'), W / 2, H - 110);
 
   ctx.strokeStyle = 'rgba(180, 150, 100, 0.20)';
   ctx.lineWidth = 1;
@@ -973,7 +973,7 @@ async function openShareModal() {
     const slug = state.artwork.title.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
-    els.shareDownload.download = `pixel-provenance_${slug}.png`;
+    els.shareDownload.download = `brushstroke_${slug}.png`;
   } catch (e) {
     els.shareDownload.removeAttribute('href');
   }

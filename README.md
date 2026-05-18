@@ -1,7 +1,8 @@
 # Brushstroke
 
-> Pixel Provenance — An Appraisal.
+> An Appraisal.
 > Identify the painting in as few guesses as possible. Each wrong attribution doubles the resolution.
+> Starts at 8 tiles (4×2); ends at 512.
 
 A single-screen browser game. Start at 2 tiles, fail your way to 512.
 
