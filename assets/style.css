@@ -502,6 +502,10 @@
     gap: 10px;
     align-items: stretch;
   }
+  .guess-input-wrap {
+    position: relative;
+    min-width: 0;
+  }
   .guess-input {
     padding: 14px 18px;
     background: oklch(10% 0.010 45);
@@ -571,6 +575,46 @@
     background: linear-gradient(180deg, oklch(35% 0.03 55), oklch(25% 0.02 50));
     color: var(--quiet);
     border-color: oklch(30% 0.025 55);
+  }
+
+  /* ===================================================================
+     Autocomplete dropdown — appears under the input after 3+ chars.
+     Floats over the feedback line so the score row doesn't jump.
+     =================================================================== */
+  .ac-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 40;
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+    background: oklch(10% 0.012 45);
+    border: 1px solid var(--gold-dark);
+    border-radius: 1px;
+    box-shadow:
+      0 14px 32px oklch(0% 0 0 / 0.6),
+      0 0 0 1px oklch(0% 0 0 / 0.4);
+    max-height: 296px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-dark) transparent;
+  }
+  .ac-item {
+    padding: 9px 18px;
+    font-family: var(--serif);
+    font-size: clamp(15px, 1.4vw, 17px);
+    font-style: italic;
+    color: var(--ink-warm);
+    cursor: pointer;
+    line-height: 1.4;
+    transition: background 120ms, color 120ms;
+  }
+  .ac-item:hover,
+  .ac-item.highlighted {
+    background: oklch(18% 0.025 55);
+    color: var(--gold);
   }
 
   .feedback {

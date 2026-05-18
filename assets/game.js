@@ -161,6 +161,7 @@ const els = {
   guessInput:    $('guess-input'),
   guessSubmit:   $('guess-submit'),
   feedback:      $('feedback'),
+  acList:        $('ac-list'),
 
   actionClue:    $('action-clue'),
   actionConcede: $('action-concede'),
@@ -590,6 +591,7 @@ function setMosaicLevelEmpty() {
 function enableInput(on) {
   els.guessInput.disabled = !on;
   els.guessSubmit.disabled = !on;
+  if (!on) closeAutocomplete();
 }
 
 /* ---- Guess submission ------------------------------------------------ */
@@ -622,6 +624,7 @@ async function submitGuess() {
 
   // wrong guess
   els.guessInput.value = '';
+  closeAutocomplete();
   if (state.level >= MAX_LEVEL) {
     setFeedback('The canvas has nothing further to reveal.', 'feedback-warn');
     updateScoreboard({ flashGuesses: true });
@@ -1022,6 +1025,26 @@ els.guessInput.addEventListener('input', () => {
     els.actionConcede.textContent = 'Concede';
     clearFeedback();
   }
+  renderAutocomplete();
+});
+
+els.guessInput.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown') {
+    if (navigateAutocomplete(1)) e.preventDefault();
+  } else if (e.key === 'ArrowUp') {
+    if (navigateAutocomplete(-1)) e.preventDefault();
+  } else if (e.key === 'Enter' && acHighlighted >= 0) {
+    e.preventDefault();
+    selectMatch(acHighlighted);
+  } else if (e.key === 'Escape' && !els.acList.hidden) {
+    e.preventDefault();
+    closeAutocomplete();
+  }
+});
+
+// Defer close so a click on a dropdown item lands before blur fires.
+els.guessInput.addEventListener('blur', () => {
+  setTimeout(closeAutocomplete, 150);
 });
 
 els.rNext.addEventListener('click', nextRound);
@@ -1041,5 +1064,116 @@ els.shareModal.addEventListener('click', (e) => {
   if (e.target === els.shareModal) closeShareModal();
 });
 
+/* =====================================================================
+   Autocomplete dropdown — typing aid backed by ~2000 famous painting
+   titles fetched from Wikidata at build time. All catalogue answers are
+   guaranteed to be in the index (see scripts/fetch-painting-index.mjs).
+   Shows after 3+ characters so 1-char filters can't enumerate the field.
+   ===================================================================== */
+const AC_MIN_CHARS = 3;
+const AC_MAX_RESULTS = 10;
+
+let paintingIndex = [];     // array of title strings, loaded from JSON
+let acMatches = [];         // titles currently visible in the dropdown
+let acHighlighted = -1;     // index into acMatches, or -1 when nothing is focused
+
+async function loadPaintingIndex() {
+  try {
+    const r = await fetch('assets/painting-index.json');
+    if (!r.ok) return;
+    paintingIndex = await r.json();
+  } catch (_) {
+    // Index is a nice-to-have; the game still works without it.
+  }
+}
+
+// Score a candidate title against the user's query. Higher = better match.
+// Order of preference: exact > startsWith > "the X" startsWith > word-start > contains.
+function scoreMatch(titleLower, q) {
+  if (titleLower === q) return 1000;
+  if (titleLower.startsWith(q)) return 500 - titleLower.length;
+  if (titleLower.startsWith('the ') && titleLower.slice(4).startsWith(q)) return 450 - titleLower.length;
+  const wordIdx = titleLower.indexOf(' ' + q);
+  if (wordIdx >= 0) return 200 - wordIdx;
+  const subIdx = titleLower.indexOf(q);
+  if (subIdx >= 0) return 100 - subIdx;
+  return 0;
+}
+
+function findMatches(query) {
+  const q = query.toLowerCase().trim();
+  if (q.length < AC_MIN_CHARS) return [];
+  const scored = [];
+  for (const title of paintingIndex) {
+    const s = scoreMatch(title.toLowerCase(), q);
+    if (s > 0) scored.push([s, title]);
+  }
+  scored.sort((a, b) => b[0] - a[0] || a[1].localeCompare(b[1]));
+  return scored.slice(0, AC_MAX_RESULTS).map(([, t]) => t);
+}
+
+function renderAutocomplete() {
+  if (state.resolved || els.guessInput.disabled) {
+    closeAutocomplete();
+    return;
+  }
+  acMatches = findMatches(els.guessInput.value);
+  acHighlighted = -1;
+  els.guessInput.removeAttribute('aria-activedescendant');
+
+  if (acMatches.length === 0) {
+    closeAutocomplete();
+    return;
+  }
+
+  els.acList.textContent = '';
+  acMatches.forEach((title, i) => {
+    const li = document.createElement('li');
+    li.className = 'ac-item';
+    li.id = 'ac-item-' + i;
+    li.setAttribute('role', 'option');
+    li.textContent = title;
+    // Use mousedown (not click) so it fires before the input's blur handler
+    // which would otherwise close the dropdown before selection lands.
+    li.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      selectMatch(i);
+    });
+    els.acList.appendChild(li);
+  });
+  els.acList.hidden = false;
+  els.guessInput.setAttribute('aria-expanded', 'true');
+}
+
+function closeAutocomplete() {
+  els.acList.hidden = true;
+  els.acList.textContent = '';
+  acMatches = [];
+  acHighlighted = -1;
+  els.guessInput.setAttribute('aria-expanded', 'false');
+  els.guessInput.removeAttribute('aria-activedescendant');
+}
+
+function navigateAutocomplete(delta) {
+  if (acMatches.length === 0) return false;
+  acHighlighted = (acHighlighted + delta + acMatches.length) % acMatches.length;
+  const items = els.acList.querySelectorAll('.ac-item');
+  items.forEach((it, i) => it.classList.toggle('highlighted', i === acHighlighted));
+  const current = items[acHighlighted];
+  if (current) {
+    els.guessInput.setAttribute('aria-activedescendant', current.id);
+    current.scrollIntoView({ block: 'nearest' });
+  }
+  return true;
+}
+
+function selectMatch(i) {
+  if (i < 0 || i >= acMatches.length) return;
+  els.guessInput.value = acMatches[i];
+  closeAutocomplete();
+  els.guessInput.focus();
+}
+
 /* ---- Go -------------------------------------------------------------- */
+loadPaintingIndex();
 startRound();

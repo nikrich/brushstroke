@@ -59,15 +59,22 @@
     <div class="console">
       <form class="guess" id="guess-form" autocomplete="off">
         <div class="guess-row">
-          <input type="text"
-                 id="guess-input"
-                 class="guess-input"
-                 placeholder="Attribute the painting…"
-                 autocomplete="off"
-                 spellcheck="false"
-                 autocapitalize="words"
-                 maxlength="80"
-                 aria-label="Your attribution">
+          <div class="guess-input-wrap">
+            <input type="text"
+                   id="guess-input"
+                   class="guess-input"
+                   placeholder="Attribute the painting…"
+                   autocomplete="off"
+                   spellcheck="false"
+                   autocapitalize="words"
+                   maxlength="80"
+                   role="combobox"
+                   aria-label="Your attribution"
+                   aria-autocomplete="list"
+                   aria-controls="ac-list"
+                   aria-expanded="false">
+            <ul id="ac-list" class="ac-list" role="listbox" aria-label="Painting suggestions" hidden></ul>
+          </div>
           <button type="submit" class="guess-submit" id="guess-submit">Appraise</button>
         </div>
         <div class="feedback" id="feedback">&nbsp;</div>
