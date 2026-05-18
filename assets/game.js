@@ -3,7 +3,7 @@
    ===================================================================== */
 
 /* ---- Tunables -------------------------------------------------------- */
-const START_LEVEL = 4;          // 4 = 16 tiles (4×4). Each wrong guess doubles.
+const START_LEVEL = 6;          // 6 = 64 tiles (8×8). Each wrong guess doubles.
 const MAX_LEVEL   = 9;          // 512 tiles — effectively resolved.
 const COLOR_RES   = 512;        // off-screen canvas size for color sampling.
 const FADE_MS     = 380;        // tile crossfade duration
@@ -135,7 +135,7 @@ const COPY = {
   concedeFirst: 'Concede this lot? Tap again to confirm.',
   fetchErr: 'This lot is currently between exhibitions.',
   awaiting: 'Awaiting attribution',
-  opening: 'Sixteen rough fields. Make the call.'
+  opening: 'An eight-by-eight blur. Make the call.'
 };
 
 const SHARE_COPY = {
