@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Brushstroke</title>
+  <defs>
+    <linearGradient id="gilt" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0"    stop-color="#6b502a"/>
+      <stop offset="0.18" stop-color="#c9a35a"/>
+      <stop offset="0.34" stop-color="#efd49a"/>
+      <stop offset="0.50" stop-color="#a87f3e"/>
+      <stop offset="0.68" stop-color="#ddb46a"/>
+      <stop offset="0.82" stop-color="#825f2d"/>
+      <stop offset="1"    stop-color="#3c2a13"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shell background -->
+  <rect width="32" height="32" fill="#1a1310"/>
+
+  <!-- Outer dark hairline so the frame separates from any dark bg it sits on -->
+  <rect x="1.5" y="1.5" width="29" height="29" fill="#0a0805"/>
+
+  <!-- Gilt frame -->
+  <rect x="2" y="2" width="28" height="28" fill="url(#gilt)"/>
+
+  <!-- Inner painting area -->
+  <rect x="6" y="6" width="20" height="20" fill="#0a0805"/>
+
+  <!-- 4×2 mosaic tiles inside the frame, warm museum palette (the game's
+       starting clarity is 8 tiles in a 4×2 grid). Each tile is 5×10. -->
+  <rect x="6"  y="6"  width="5" height="10" fill="#4a3320"/>
+  <rect x="11" y="6"  width="5" height="10" fill="#6b4a28"/>
+  <rect x="16" y="6"  width="5" height="10" fill="#3a2818"/>
+  <rect x="21" y="6"  width="5" height="10" fill="#2a1d14"/>
+  <rect x="6"  y="16" width="5" height="10" fill="#1d1410"/>
+  <rect x="11" y="16" width="5" height="10" fill="#33231a"/>
+  <rect x="16" y="16" width="5" height="10" fill="#22180f"/>
+  <rect x="21" y="16" width="5" height="10" fill="#1a120c"/>
+
+  <!-- Inner top shadow to suggest the recessed canvas -->
+  <rect x="6" y="6" width="20" height="2" fill="#000" opacity="0.45"/>
+
+  <!-- Hairline frame edge (gold highlight on the inside of the gilt) -->
+  <rect x="5.5" y="5.5" width="21" height="21" fill="none" stroke="#000" stroke-opacity="0.7" stroke-width="0.8"/>
+</svg>
